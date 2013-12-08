@@ -1,0 +1,35 @@
+2
+this.begin = 10102414
+in close
+java.io.RandomAccessFile@4277158a
+2
+this.begin = 10390334
+in close
+java.io.RandomAccessFile@8d80be3
+4
+this.begin = 0
+in close
+java.io.RandomAccessFile@1ff4689e
+2
+this.begin = 453546
+in close
+java.io.RandomAccessFile@27ce2dd4
+2
+this.begin = 739026
+in close
+java.io.RandomAccessFile@211d0a4f
+
+
+2013-12-08 17:36:40,180 [main] - Debug info.42810
+2013-12-08 17:36:40,180 [main] - Info info42810
+2013-12-08 17:36:40,180 [main] - Warn info42810
+2013-12-08 17:36:40,180 [main] - Error info42810
+2013-12-08 17:36:40,180 [main] - Fatal info42810
+2013-12-08 17:36:40,594 [main] - Info info43202
+2013-12-08 17:36:40,594 [main] - Warn info43202
+2013-12-08 17:36:40,594 [main] - Error info43202
+2013-12-08 17:36:40,594 [main] - Fatal info43202
+2013-12-08 17:36:40,594 [main] - Debug info.43203
+2013-12-08 17:36:40,594 [main] - Info info43203
+2013-12-08 17:36:40,594 [main] - Warn info43203
+2013-12-08 17:36:40,594 [main] - Error info43203
