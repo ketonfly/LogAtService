@@ -12,12 +12,14 @@ public class ReadFileFromTime {
 	// 1. tMap.clean()
 	// 获取的时候已经自动更新了
 	// 2. 当只有一个文件的时候，如何操作
+	//	已经包括了
 	// 3. Begin失效，丢失部分相关数据
+	//	增大 MaxIndex 减少极端情况
 
 	String folder;
-	Long LastModifyTime = (long) 0;
+	Long LastReadedTime = (long) 0;
 	Long nowLastModifyTime;
-	static int llbegin = 0;
+	int nextBegin = 0;
 
 	// TreeMap<Long, File> tMap = null;
 
@@ -48,20 +50,20 @@ public class ReadFileFromTime {
 					}
 				});
 		for (int i = 0; i < test.length; i++) {
-			if(test[i].lastModified()>=this.LastModifyTime)
-			ftan.put(new Long(test[i].lastModified()), test[i]);
+			if (test[i].lastModified() >= this.LastReadedTime)
+				ftan.put(new Long(test[i].lastModified()), test[i]);
 		}
 		return ftan;
 	}
 
 	// 记录当前读取文件的modify time
-	public void setLastModifyTime(Long lmt) {
-		this.LastModifyTime = lmt;
+	public void setLastReadedTime(Long lrt) {
+		this.LastReadedTime = lrt;
 	}
 
 	// 获得当前读取或者刚刚完成读取的文件的modify time
-	public long getLastModifyTime() {
-		return this.LastModifyTime;
+	public long getLastReadedTime() {
+		return this.LastReadedTime;
 	}
 
 	// 获取当前问价夹下最老文件的modify time
@@ -76,7 +78,7 @@ public class ReadFileFromTime {
 
 	// /获取当前问价夹下第二老文件的modify time
 	public long getSecondLastModifyTime(TreeMap<Long, File> tMap) {
-		return tMap.ceilingKey(this.LastModifyTime + 1);
+		return tMap.ceilingKey(this.LastReadedTime + 1);
 	}
 
 	// 获取当前问价夹下第二老文件的名字
@@ -84,54 +86,53 @@ public class ReadFileFromTime {
 		return tMap.get(this.getSecondLastModifyTime(tMap));
 	}
 
-	public void ReadFile(Long lmt, int mybegin) {
+	public void ReadFile(Long lrt, int mybegin) {
 		System.out.println("in readfile");
 		int begin = mybegin;
 		RandomAccessFile randomFile = null;
-		String filename = this.getAllFiles().get(lmt).toString();
+		String filename = this.getAllFiles().get(lrt).toString();
 		System.out.println(filename);
-		this.setLastModifyTime(lmt);
+		this.setLastReadedTime(lrt);
 		TreeMap<Long, File> tMap = null;
 
 		try {
 			randomFile = new RandomAccessFile(filename, "r");
-			String backupfile = "/home/keton/new_workspace/LogAtService/src/logs/backup.log";
-			long fileLength;
-			while (true) {
+			String backupfile = "/home/keton/new_workspace/LogAtService/src/backup/backup.log";
+			File file = new File("backupfile");
+			if (!file.exists()) {
 				try {
-					fileLength = randomFile.length();
-					System.out.println(fileLength);
-					if (fileLength > begin) {
-						randomFile.seek(begin);
-						byte[] bytes = new byte[10];
-						int byteread = 0;
-						while ((byteread = randomFile.read(bytes)) != -1) {
-							begin = begin + byteread;
-							this.appendMethodA(backupfile, new String(bytes));
-						}
-					}
-					tMap = this.getAllFiles();
-					this.nowLastModifyTime = this.getLastModifyTime(tMap);
-					if (this.nowLastModifyTime > this.LastModifyTime) {
-						this.llbegin = 0;
-						break;
-					} else if (this.getSecondLastModifyTime(tMap) == tMap
-							.lastKey() && tMap.get(LastModifyTime) == null) {
-						this.llbegin = begin;
-						break;
-					} else if (this.getSecondLastModifyTime(tMap) == tMap
-							.lastKey() && tMap.get(LastModifyTime) != null) {
-						this.llbegin = 0;
-						break;
-					} else {
-						this.llbegin = 0;
-						break;
-					}
-
+					file.createNewFile();
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+			}
+			
+			long fileLength;
+
+			try {
+				fileLength = randomFile.length();
+				System.out.println(fileLength);
+				if (fileLength > begin) {
+					randomFile.seek(begin);
+					byte[] bytes = new byte[10];
+					int byteread = 0;
+					while ((byteread = randomFile.read(bytes)) != -1) {
+						begin = begin + byteread;
+						this.appendMethodA(backupfile, new String(bytes));
+					}
+				}
+				tMap = this.getAllFiles();
+				if (this.getSecondLastModifyTime(tMap) == tMap.lastKey()
+						&& tMap.get(LastReadedTime) == null) {
+					this.nextBegin = begin;
+				} else {
+					this.nextBegin = 0;
+				}
+
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 
 		} catch (FileNotFoundException e) {
@@ -152,24 +153,13 @@ public class ReadFileFromTime {
 	public void func() {
 		System.out.println("func");
 		TreeMap<Long, File> tMap = this.getAllFiles();
-		this.setLastModifyTime(this.getLastModifyTime(tMap));
+		this.setLastReadedTime(this.getLastModifyTime(tMap));
 
-		ReadFile(this.LastModifyTime, 0);
+		ReadFile(this.LastReadedTime, 0);
 		System.out.println("before while");
 		while (true) {
 			tMap = this.getAllFiles();
-			this.nowLastModifyTime = this.getLastModifyTime(tMap);
-			if (this.nowLastModifyTime > this.LastModifyTime) {
-				this.setLastModifyTime(this.nowLastModifyTime);
-				ReadFile(this.getSecondLastModifyTime(tMap), 0);
-			} else if (this.getSecondLastModifyTime(tMap) == tMap.lastKey()
-					&& tMap.get(LastModifyTime) == null) {
-				ReadFile(tMap.lastKey(), this.llbegin);
-			} else {
-				this.setLastModifyTime(tMap.lastKey());
-				ReadFile(tMap.lastKey(), 0);
-			}
-
+			ReadFile(this.getSecondLastModifyTime(tMap), this.nextBegin);
 		}
 	}
 
@@ -192,10 +182,23 @@ public class ReadFileFromTime {
 
 		String folder = "/home/keton/new_workspace/LogAtService/src/logs";
 		ReadFileFromTime rfft = new ReadFileFromTime(folder);
+		TreeMap<Long, File> tMap = null;
+		int  i = 0;
 		while (true) {
-			System.out.println(rfft.getAllFiles());
+			
+			tMap = rfft.getAllFiles();
+			System.out.println(tMap);
+			if(i%2==0){
+				rfft.ReadFile(tMap.firstKey(), rfft.nextBegin);
+				System.out.println("first key "+ "nextBegin = "+ rfft.nextBegin);
+			}
+			else {
+				rfft.ReadFile(tMap.lastKey(),rfft.nextBegin);
+				System.out.println("last key "+ "nextBegin = "+ rfft.nextBegin);
+			}
+			i++;
 			try {
-				Thread.sleep(10000);
+				Thread.sleep(0);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
